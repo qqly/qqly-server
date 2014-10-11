@@ -1,79 +1,12 @@
-function newId() {
-	var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'.split('');
-	var newId = [];
-	var i = 0;
-	var radix = chars.length;
-	var len = 12;
-
-	for (i = 0; i < len; i++) newId[i] = chars[0 | Math.random()*radix];
-
-	return newId.join('');
-}
-
-
-//var state = 'dunno';
-//
-//function setState(newState) {
-//	if (newState === state) {
-//		return;
-//	}
-//	state = newState;
-//
-//	switch(state) {
-//		case 'home':
-//
-//			break;
-//	}
-//}
-//
-//
-//if (location.pathname === '/') {
-//	setState('home');
-//
-//} else {
-//
-//}
-
-
-
 var SERVER_URL = 'http://0.0.0.0:8000/';
 //var SERVER_URL = 'http://sftp.42technologies.com:8000/';
 
-function guidGenerator() {
-	function s4() {
-		return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-	}
-	return (s4()+s4()+"-"+s4()+"-"+s4()+"-"+s4()+"-"+s4()+s4()+s4());
-}
+var MAX_POINTS = 30;
 
-var userId = guidGenerator();
-var roomId = 0;
-var iframe = null;
-
-
-function start() {
-	iframe = document.getElementById('iframe');
-	if (!iframe) {
-		iframe = document.createElement('iframe');
-		iframe.id = 'iframe';
-		document.body.appendChild(iframe);
-	} else {
-		// disconnect
-	}
-	roomId = guidGenerator();
-	//iframe.src = SERVER_URL + 'start?roomId=' + roomId + '&userId=' + userId;
-}
 
 function push(long, lat) {
-
-
-	if (!iframe) {
-		throw new Error('Cannot push, not iframe found. Need to start() first.');
-	}
-	iframe.src = SERVER_URL + 'push?roomId=' + roomId + '&userId=' + userId + '&long=' + long + '&lat=' + lat;
+	//FIXME
 }
-
-
 
 //POST /rooms/<RoomID>
 //
@@ -86,53 +19,169 @@ function push(long, lat) {
 //};
 
 
-
-
-
 L.mapbox.accessToken = 'pk.eyJ1IjoibjEydiIsImEiOiJzcE5NX0hzIn0.0tJfYm5rf6ln0NiTjSTPaQ';
 var map = L.mapbox.map('map', 'examples.map-h67hf2ic');
-map.setView([37.7847328, -122.40225459999999], 18);
+//map.locate({setView: true, maxZoom: 16});
+//map.setView([37.7847328, -122.40225459999999], 18);
 
-// Build a marker from a simple GeoJSON object:
-var marker = L.mapbox.featureLayer({
-	type: 'Feature',
-	geometry: {
-		type: 'Point',
-		coordinates: [-122.40225459999999, 37.7847328]
-	},
-	properties: {
-		title: 'Hello world!',
-		'marker-color': '#f86767'
+
+var points = [];
+var markers = [];
+var lines = [];
+
+
+addMarker(-122.40225459999999, 37.7847328, 25);
+
+
+
+function fakeWatchPosition(long, lat, fn) {
+	function rnd() {
+		return (Math.random() - 0.5) / 1000;
 	}
-}).addTo(map);
 
-// Iterate over the featureLayer we've called "marker"
-// and open its popup instead of clicking to trigger it.
-marker.eachLayer(function(m) {
-	m.openPopup();
-});
+	setInterval(function() {
+		fn({
+			coords: {
+				longitude: long,
+				latitude: lat,
+				accuracy: 5 + Math.random() * 30
+			}
+		});
+		long += rnd();
+		lat += rnd();
+	}, 1000);
+}
 
-
-var watchID = navigator.geolocation.watchPosition(function(position) {
+function onMove(position) {
+	var accuracy = position.coords.accuracy;
 	console.log(position.coords.latitude, position.coords.longitude);
-	addMarker(position.coords.longitude, position.coords.latitude);
-}, function onError(er) {
-	console.log(er);
-}, {
-	enableHighAccuracy: true
-});
+	addMarker(position.coords.longitude, position.coords.latitude, accuracy / 2);
+}
+
+function onMoveError(err) {
+	console.warn(err);
+}
 
 
-function addMarker(longitude, latitude) {
-	marker = L.mapbox.featureLayer({
-		type: 'Feature',
-		geometry: {
-			type: 'Point',
-			coordinates: [longitude, latitude]
-		},
-		properties: {
-			title: 'Hello world!',
-			'marker-color': '#ff6733'
+var watchID = 0;
+if (location.search == '?fake') {
+	console.info('random location');
+	fakeWatchPosition(-122.40225459999999, 37.7847328, onMove);
+} else {
+	watchID = navigator.geolocation.watchPosition(onMove, onMoveError, {enableHighAccuracy: true});
+}
+
+
+
+
+function removeExceedingMarkers() {
+	if (markers.length <= MAX_POINTS) {
+		return;
+	}
+
+	var toRemove = markers.slice(0, markers.length - MAX_POINTS);
+	var i = toRemove.length;
+	while (i--) {
+		var marker = toRemove[i];
+		map.removeLayer(marker);
+	}
+
+	markers = markers.slice(markers.length - MAX_POINTS);
+}
+
+
+
+function removeAll() {
+	markers.forEach(function(m) {
+		map.removeLayer(m);
+	});
+	markers.length = 0;
+
+	lines.forEach(function(l) {
+		map.removeLayer(l);
+	});
+	lines.length = 0;
+}
+
+
+function addMarker(longitude, latitude, radius) {
+	//removeExceedingMarkers();
+	removeAll();
+
+	//points.push({long: longitude, lat: latitude, r: radius});
+	points.push([latitude, longitude]);
+	points = points.slice(-MAX_POINTS);
+
+	drawAll(points);
+
+	//var marker = L.circle([latitude, longitude], radius, {
+	//	color: 'red',
+	//	weight: 2,
+	//	fillColor: '#f03',
+	//	fillOpacity: 0.2
+	//}).addTo(map);
+	//
+	//if (points.length >= 2) {
+	//	polyline = L.polyline(points.map(function(p) {
+	//		return [p.lat, p.long];
+	//	}), {color: 'red'}).addTo(map);
+	//
+	//	map.fitBounds(polyline.getBounds());
+	//}
+	//
+	//markers.push(marker);
+}
+
+
+function drawAll(points) {
+
+	function f(i, max) {
+		if (i === max) {
+			return 1;
+		} else {
+			return 0.9 * i / max;
 		}
-	}).addTo(map);
+	}
+
+	function p(i, max) {
+		if (i === max) {
+			return 0.8;
+		} else {
+			return 0.4 * i / max;
+		}
+	}
+
+
+	var prev = null;
+	var lastIndex = points.length - 1;
+	for (var i = 0; i < points.length; i++) {
+		var point = points[i];
+		var q = p(i, lastIndex);
+
+		if (prev) {
+			var polyline = L.polyline([prev, point], {
+				color: '#4294FF',
+				weight: 2 + q * 4,
+				opacity: q
+			}).addTo(map);
+			lines.push(polyline);
+		}
+
+		if (i === lastIndex) {
+			var marker = L.circleMarker(point, {
+				radius: 5,
+				color: '#4294FF',
+				weight: 1,
+				opacity: 1,
+				fillOpacity: 1
+			}).addTo(map);
+			markers.push(marker);
+		}
+
+		prev = point;
+	}
+
+	if (polyline) {
+		map.fitBounds(polyline.getBounds());
+	}
 }
