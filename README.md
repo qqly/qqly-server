@@ -6,6 +6,8 @@ repository-250
 
 ```
 brew install erlang rebar
+
+cd server
+rebar get-deps
 rebar compile
 ```
-
