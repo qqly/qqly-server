@@ -1,28 +1,15 @@
 var SERVER_URL = 'http://0.0.0.0:8000/';
 //var SERVER_URL = 'http://sftp.42technologies.com:8000/';
 
-var MAX_POINTS = 30;
+var MAX_POINTS = 60;
 
 
 function push(long, lat) {
 	//FIXME
 }
 
-//POST /rooms/<RoomID>
-//
-//userId
-
-
-//var x = {
-//	userId1:{longitude:1234,latitude:1234},
-//	userId2:{longitude:1234,latitude:1234}
-//};
-
-
 L.mapbox.accessToken = 'pk.eyJ1IjoibjEydiIsImEiOiJzcE5NX0hzIn0.0tJfYm5rf6ln0NiTjSTPaQ';
 var map = L.mapbox.map('map', 'examples.map-h67hf2ic');
-//map.locate({setView: true, maxZoom: 16});
-//map.setView([37.7847328, -122.40225459999999], 18);
 
 
 var points = [];
@@ -72,25 +59,6 @@ if (location.search == '?fake') {
 }
 
 
-
-
-function removeExceedingMarkers() {
-	if (markers.length <= MAX_POINTS) {
-		return;
-	}
-
-	var toRemove = markers.slice(0, markers.length - MAX_POINTS);
-	var i = toRemove.length;
-	while (i--) {
-		var marker = toRemove[i];
-		map.removeLayer(marker);
-	}
-
-	markers = markers.slice(markers.length - MAX_POINTS);
-}
-
-
-
 function removeAll() {
 	markers.forEach(function(m) {
 		map.removeLayer(m);
@@ -105,44 +73,16 @@ function removeAll() {
 
 
 function addMarker(longitude, latitude, radius) {
-	//removeExceedingMarkers();
 	removeAll();
 
-	//points.push({long: longitude, lat: latitude, r: radius});
 	points.push([latitude, longitude]);
 	points = points.slice(-MAX_POINTS);
 
 	drawAll(points);
-
-	//var marker = L.circle([latitude, longitude], radius, {
-	//	color: 'red',
-	//	weight: 2,
-	//	fillColor: '#f03',
-	//	fillOpacity: 0.2
-	//}).addTo(map);
-	//
-	//if (points.length >= 2) {
-	//	polyline = L.polyline(points.map(function(p) {
-	//		return [p.lat, p.long];
-	//	}), {color: 'red'}).addTo(map);
-	//
-	//	map.fitBounds(polyline.getBounds());
-	//}
-	//
-	//markers.push(marker);
 }
 
 
 function drawAll(points) {
-
-	function f(i, max) {
-		if (i === max) {
-			return 1;
-		} else {
-			return 0.9 * i / max;
-		}
-	}
-
 	function p(i, max) {
 		if (i === max) {
 			return 0.8;
