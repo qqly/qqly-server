@@ -1,0 +1,14 @@
+
+# sublime
+*.sublime-project
+*.sublime-workspace
+
+# OSX
+.DS_Store
+*.swp
+*.lock
+profile
+
+server/ebin/*
+server/deps/*
+server/.rebar/*
