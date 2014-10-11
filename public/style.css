@@ -1,0 +1,51 @@
+body {
+	margin:0;
+	padding:0;
+
+	/*-webkit-touch-callout: none;*/
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+#map {
+	position: absolute;
+	top: 0;
+	bottom: 60px;
+	left: 0;
+	right: 0;
+}
+#controls {
+	position: absolute;
+	bottom: 0;
+	height: 60px;
+	left: 0;
+	right: 0;
+}
+.button {
+	height: 60px;
+	line-height: 60px;
+
+	vertical-align: middle;
+	text-align: center;
+	display: block;
+	cursor: pointer;
+
+	font-size: 18px;
+	font-family: Helvetica, sans-serif;
+	text-decoration: none;
+	text-transform: uppercase;
+	letter-spacing: 0.3em;
+	white-space: nowrap;
+}
+
+.button-start {
+	background: hsl(214, 100%, 63%);
+	color: white;
+}
+
+.button-stop {
+	background: hsl(0, 100%, 72%);
+	color: white;
+}
