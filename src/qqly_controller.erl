@@ -28,7 +28,7 @@ terminate(_Reason, _State) ->
 
 
 start_link() ->
-    gen_server:start_link(?MODULE, [], []).
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 stop() ->
     gen_server:cast(?MODULE, stop).
@@ -45,12 +45,12 @@ get_room(RoomId) ->
 
 init([]) ->
     io:format("initializing `qqly_controller`~n"),
-    qqly_supervisor:start_link(),
+    qqly_room_sup:start_link(),
     {ok, dict:new()}.
 
 
 handle_call(list_rooms, _From, State) ->
-    {reply, {ok, dict:keys(State)}, State};
+    {reply, {ok, dict:fetch_keys(State)}, State};
 
 
 handle_call({get_room, RoomId}, _From, State) ->
@@ -68,7 +68,9 @@ handle_cast(stop, State) ->
 
 
 handle_cast({update_user, RoomId, UserId, Value}, State) ->
+    io:format("Updating user."),
     {RoomPid, NewState} = get_or_create_room(RoomId, State),
+    io:format("Room pid ~w", [RoomPid]),
     gen_server:cast(RoomPid, {update_user, UserId, Value}),
     {noreply, NewState}.
 
@@ -85,14 +87,16 @@ code_change(_OldVsn, State, _Extra) ->
 get_or_create_room(RoomId, State) ->
     case pid_dict:find(RoomId, State) of
         {ok, Pid} ->
+            io:format("Room already exists."),
             {Pid, State};
         error ->
+            io:format("Creating room."),
             create_room(RoomId, State)
     end.
 
 
 
 create_room(RoomId, State) ->
-    {ok, Pid} = subpro_supervisor:create_room(RoomId),
+    {ok, Pid} = qqly_room_sup:create_room(RoomId),
     {Pid, pid_dict:store(RoomId, Pid, State)}.
 

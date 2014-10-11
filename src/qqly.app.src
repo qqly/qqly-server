@@ -1,0 +1,13 @@
+{application, qqly,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  leptus
+                 ]},
+  {mod, { qqly_app, []}},
+  {env, []}
+ ]}.

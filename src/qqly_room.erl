@@ -22,6 +22,7 @@
 
 
 
+
 terminate(_Reason, _State) ->
     error_logger:info_msg("terminating~n"),
     ok.
@@ -46,8 +47,7 @@ interval_milliseconds() -> 1000.
 init([Id]) ->
     timer:send_interval(interval_milliseconds(), interval),
     io:format("Room has started ~p (~w)~n", [Id, self()]),
-    InitialState = dict:new(),
-    {ok, InitialState}.
+    {ok, dict:new()}.
 
 
 handle_call(get_state, _From, State) ->
@@ -69,7 +69,6 @@ handle_cast({update_user, Id, Value}, State) ->
 handle_info(interval, State) ->
     % mark inactive users as dropped
     % delete disconnected users
-    exit(normal),
     {noreply, State};
 
 

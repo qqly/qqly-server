@@ -9,6 +9,6 @@
 *.lock
 profile
 
-server/ebin/*
-server/deps/*
-server/.rebar/*
+ebin/*
+deps/*
+.rebar/*

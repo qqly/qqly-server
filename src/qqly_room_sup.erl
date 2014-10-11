@@ -23,4 +23,3 @@ start_link() ->
 create_room(RoomId) ->
     io:format("Creating room `~p`", [RoomId]),
     supervisor:start_child(?MODULE, [RoomId]).
-
