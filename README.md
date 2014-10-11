@@ -1,13 +1,15 @@
-repository-250
-==============
+# repository-250
 
-
-## qqly server
+## Installation
 
 ```
 brew install erlang rebar
+make run
+```
 
-cd server
-rebar get-deps
-rebar compile
+## Deploying to heroku
+
+```
+heroku apps:create qqly
+heroku config:add BUILDPACK_URL="https://github.com/archaelus/heroku-buildpack-erlang.git" -a qqly
 ```

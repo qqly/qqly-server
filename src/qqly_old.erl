@@ -1,5 +1,5 @@
 
--module(qqly).
+-module(qqly_old).
 
 
 -export([
