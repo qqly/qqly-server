@@ -2,6 +2,9 @@
 
 all: deps compile
 
+clean:
+	rm -rf ebin deps
+
 deps:
 	rebar get-deps
 
