@@ -26,6 +26,7 @@ function getRoomId() {
 
 
 var App = React.createClass({
+
 	getInitialState: function() {
 		return {
 			userId: '',
@@ -38,6 +39,7 @@ var App = React.createClass({
 			users: {}
 		}
 	},
+
 	componentDidMount: function() {
 		var userId = xkcd_pw_gen();
 
@@ -92,7 +94,7 @@ var App = React.createClass({
 		if (location.search == '?fake') {
 			watchId = person.fakeWatchPosition(-122.40225459999999, 37.7847328, this.onMove);
 		} else {
-			watchID = navigator.geolocation.watchPosition(this.onMove, this.onMoveError, {enableHighAccuracy: true});
+			watchId = navigator.geolocation.watchPosition(this.onMove, this.onMoveError, {enableHighAccuracy: true});
 		}
 
 		this.setState({watchId: watchId});
@@ -104,22 +106,36 @@ var App = React.createClass({
 
 	startReceiving: function() {
 
-		var receivingId = setInterval(function() {
-			$.get('http://qqly.herokuapp.com/api/rooms/' + this.state.roomId, function(data, e) {
+		var self = this;
 
-				data = data.length === 0? {} : data;
-				data = Object.keys(data).reduce(function(result, key) {
-					var d = data[key];
-					var lat = parseFloat(d[0]), long = parseFloat(d[1]);
-					result[key] = {longitude:long, latitude:lat};
-					return result;
-				}, {});
-				console.log('DATA', e, JSON.stringify(data, null, 2));
-				this.updateMapState(data);
-			}.bind(this));
-		}.bind(this), 1000);
+		function update() {
+			var startTime = Date.now();
+			var minimum = 3333;
+			$.ajax({
+				url: 'http://qqly.herokuapp.com/api/rooms/' + self.state.roomId,
+				type: 'GET',
+				success: function (data, e) {
+					data = data.length === 0 ? {} : data;
+					data = Object.keys(data).reduce(function (result, key) {
+						var d = data[key];
+						var lat = parseFloat(d[0]), long = parseFloat(d[1]);
+						result[key] = {longitude: long, latitude: lat};
+						return result;
+					}, {});
+					console.log('DATA', e, JSON.stringify(data, null, 2));
+					self.updateMapState(data);
+				},
+				complete: function() {
+					var howLongItTook = Date.now() - startTime;
+					var delay = (howLongItTook < minimum)? minimum - howLongItTook : 0 ;
+					console.log("Updating took:", howLongItTook);
+					console.log("delaying by:", delay);
+					setTimeout(update, delay);
+				}
+			});
+		}
 
-		this.setState({receivingId: receivingId});
+		update();
 	},
 
 
@@ -163,19 +179,18 @@ var App = React.createClass({
 		userIds.forEach((function(userId) {
 			this.updateUser(userId, userPositions[userId]);
 		}).bind(this));
+
 		this.forceUpdate();
+
 		if (!$('body').hasClass('leaflet-dragging')) {
 			updateBoundingBox(this.state.users);
 		}
 	},
 
 	onMove: function onMove(position) {
-		console.info('onMove', position);
-
+		console.log('onMove', position);
 		var state = this.state;
-
 		console.log(position.coords.latitude, position.coords.longitude);
-
 		API.post(state.roomId, state.userId, position.coords.latitude, position.coords.longitude);
 	}
 });

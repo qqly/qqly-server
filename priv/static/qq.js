@@ -80,15 +80,6 @@ function createUser(color) {
 	}
 
 
-	var watchID = 0;
-	if (location.search == '?fake') {
-		console.info('random location');
-		fakeWatchPosition(-122.40225459999999, 37.7847328, onMove);
-	} else {
-		//watchID = navigator.geolocation.watchPosition(onMove, onMoveError, {enableHighAccuracy: true});
-	}
-
-
 	function removeAll() {
 		markers.forEach(function(m) {
 			map.removeLayer(m);
