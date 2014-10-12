@@ -55,7 +55,7 @@ if (location.search == '?fake') {
 	console.info('random location');
 	fakeWatchPosition(-122.40225459999999, 37.7847328, onMove);
 } else {
-	watchID = navigator.geolocation.watchPosition(onMove, onMoveError, {enableHighAccuracy: true});
+	//watchID = navigator.geolocation.watchPosition(onMove, onMoveError, {enableHighAccuracy: true});
 }
 
 
@@ -94,26 +94,14 @@ function drawAll(points) {
 	var prev = null;
 	var lastIndex = points.length - 1;
 
-	var bounds = null;
-
 	for (var i = 0; i < points.length; i++) {
 		var point = points[i];
 		var q = p(i, lastIndex);
 
-		if (bounds) {
-			bounds.extend(point);
-		} else {
-			var offset = 0.001;
-			bounds = L.latLngBounds(
-				[point[0] - offset, point[1] - offset],
-				[point[0] + offset, point[1] + offset]
-			);
-		}
-
 		if (prev) {
 			var polyline = L.polyline([prev, point], {
 				color: '#4294FF',
-				weight: 2 + q * 4,
+				weight: 1 + i/lastIndex * 5,
 				opacity: q
 			}).addTo(map);
 			lines.push(polyline);
@@ -121,7 +109,7 @@ function drawAll(points) {
 
 		if (i === lastIndex) {
 			var marker = L.circleMarker(point, {
-				radius: 5,
+				radius: 7,
 				color: '#4294FF',
 				weight: 1,
 				opacity: 1,
@@ -131,6 +119,22 @@ function drawAll(points) {
 		}
 
 		prev = point;
+	}
+
+
+	var bounds = null;
+	var i = points.length;
+	while (i--) {
+		var point = points[i];
+		if (bounds) {
+			bounds.extend(point);
+		} else {
+			var offset = 0.001;
+			bounds = L.latLngBounds(
+				[point[0] - offset, point[1] - offset],
+				[point[0] + offset, point[1] + offset]
+			);
+		}
 	}
 
 	if (bounds) {
