@@ -16,6 +16,15 @@ var API = {
 };
 
 
+function setRoomId(state) {
+	location.hash = state;
+	//history.replaceState(null, 'Blah', '/' + state);
+}
+
+function getRoomId() {
+	return location.hash.replace(/^\#/, '');
+}
+
 //function isOwner() {
 //	return location.pathname.slice(1) === userId;
 //}
@@ -26,15 +35,21 @@ var App = React.createClass({
 			userId: '',
 			roomId: '',
 			mode: 'home',
-			sharing: false
+			sharing: false,
+			watchId: 0,
+			receivingId: 0
 		}
 	},
 	componentDidMount: function() {
-		if (location.pathname === '/') {
+		if (getRoomId() === '') {
 			var userId = xkcd_pw_gen();
-			this.setState({userId: userId});
+			var roomId = xkcd_pw_gen();
+			this.setState({userId: userId, roomId: roomId});
 			this.setState({mode: 'home'});
-			history.replaceState(null, 'Sharing is on', '/' + userId);
+			setRoomId(roomId);
+		} else {
+			this.setState({roomId: getRoomId()});
+			this.startReceiving();
 		}
 	},
 
@@ -53,7 +68,12 @@ var App = React.createClass({
 	stopSharing: function(e) {
 		e.preventDefault();
 		this.setState({sharing: false, mode: 'home'});
-		history.replaceState(null, 'Sharing is off', '/');
+
+		if (this.state.watchId) {
+			clearInterval(this.state.watchId);
+		}
+
+		setRoomId('');
 	},
 
 	startSharing: function(e) {
@@ -62,10 +82,7 @@ var App = React.createClass({
 
 		//if (location.pathname === '/') {
 			// Create a new room.
-			var roomId = xkcd_pw_gen();
-			this.setState({roomId: roomId});
-
-			fakeWatchPosition(-122.40225459999999, 37.7847328, this.onMove);
+			this.setState({watchId: fakeWatchPosition(-122.40225459999999, 37.7847328, this.onMove)});
 			//navigator.geolocation.watchPosition(this.onMove, onMoveError, {enableHighAccuracy: true});
 
 		//} else {
@@ -74,6 +91,15 @@ var App = React.createClass({
 		//}
 	},
 
+	startReceiving: function() {
+		var receivingId = setInterval(function() {
+			$.get('http://qqly.herokuapp.com/api/rooms/' + this.state.roomId, function(e, data) {
+				console.log('DATA', e, data);
+			});
+		}.bind(this), 1000);
+
+		this.setState({receivingId: receivingId});
+	},
 
 	onMove: function onMove(position) {
 		var state = this.state;

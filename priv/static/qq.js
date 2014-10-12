@@ -26,7 +26,7 @@ function fakeWatchPosition(long, lat, fn) {
 		return (Math.random() - 0.5) / 1000;
 	}
 
-	setInterval(function() {
+	return setInterval(function() {
 		fn({
 			coords: {
 				longitude: long,
