@@ -12,4 +12,4 @@ shell: all
 	erl -pa ebin deps/*/ebin
 
 run: all
-	erl -pa ebin deps/*/ebin -s qqly
+	erl -pa ebin deps/*/ebin -noshell -s qqly_old start
