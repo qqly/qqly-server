@@ -91,12 +91,24 @@ function drawAll(points) {
 		}
 	}
 
-
 	var prev = null;
 	var lastIndex = points.length - 1;
+
+	var bounds = null;
+
 	for (var i = 0; i < points.length; i++) {
 		var point = points[i];
 		var q = p(i, lastIndex);
+
+		if (bounds) {
+			bounds.extend(point);
+		} else {
+			var offset = 0.001;
+			bounds = L.latLngBounds(
+				[point[0] - offset, point[1] - offset],
+				[point[0] + offset, point[1] + offset]
+			);
+		}
 
 		if (prev) {
 			var polyline = L.polyline([prev, point], {
@@ -121,7 +133,15 @@ function drawAll(points) {
 		prev = point;
 	}
 
-	if (polyline) {
-		map.fitBounds(polyline.getBounds());
+	if (bounds) {
+		map.fitBounds(bounds);
 	}
 }
+
+
+window.addEventListener("load", function() {
+	setTimeout(function(){
+		// Hide the address bar!
+		window.scrollTo(0, 1);
+	}, 0);
+});
