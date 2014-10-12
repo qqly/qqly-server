@@ -22,7 +22,7 @@ start_api(Module) ->
     HttpOptions  = [
         {ip, {0, 0, 0, 0}},
         {port, get_port()},
-        {static_dir, {'_', {priv_dir, ?MODULE, "public"}}}
+        {static_dir, {'_', {priv_dir, ?MODULE, "static"}}}
     ],
     leptus:start_listener(http, [{'_', HttpHandlers}], HttpOptions).
 
