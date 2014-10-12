@@ -1,7 +1,7 @@
 
 -module(qqly_controller).
 -behaviour(gen_server).
- 
+
 
 -export([
     start_link/0,
