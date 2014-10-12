@@ -1,1 +1,1 @@
-web: erl -pa ebin deps/*/ebin -noshell -s qqly_old start
+web: erl -pa ebin deps/*/ebin -noshell -s qqly start

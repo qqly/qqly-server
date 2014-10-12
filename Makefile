@@ -15,4 +15,4 @@ shell: all
 	erl -pa ebin deps/*/ebin
 
 run: all
-	erl -pa ebin deps/*/ebin -noshell -s qqly_old start
+	erl -pa ebin deps/*/ebin -noshell -s qqly start
