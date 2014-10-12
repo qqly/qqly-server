@@ -37,20 +37,27 @@ var App = React.createClass({
 			mode: 'home',
 			sharing: false,
 			watchId: 0,
-			receivingId: 0
+			receivingId: 0,
+
+			users: {}
 		}
 	},
 	componentDidMount: function() {
+		var userId = xkcd_pw_gen();
+
 		if (getRoomId() === '') {
-			var userId = xkcd_pw_gen();
 			var roomId = xkcd_pw_gen();
-			this.setState({userId: userId, roomId: roomId});
 			this.setState({mode: 'home'});
 			setRoomId(roomId);
 		} else {
-			this.setState({roomId: getRoomId()});
-			this.startReceiving();
+			roomId = getRoomId();
 		}
+
+		var users = {};
+		users[userId] = createPerson('#4294FF');
+
+		this.setState({roomId: roomId, userId: userId, users: users});
+		this.startReceiving();
 	},
 
 	render: function() {
@@ -79,35 +86,65 @@ var App = React.createClass({
 	startSharing: function(e) {
 		e.preventDefault();
 		this.setState({sharing: true, mode: 'sharing'});
-
-		//if (location.pathname === '/') {
-			// Create a new room.
-			this.setState({watchId: fakeWatchPosition(-122.40225459999999, 37.7847328, this.onMove)});
-			//navigator.geolocation.watchPosition(this.onMove, onMoveError, {enableHighAccuracy: true});
-
-		//} else {
-			// Don't create a new room.
-			// Somebody shared their location with you, you're sharing your location back.
-		//}
+		var person = this.state.users[this.state.userId];
+		var watchId = person.fakeWatchPosition(-122.40225459999999, 37.7847328, this.onMove);
+		this.setState({watchId: watchId});
 	},
 
 	startReceiving: function() {
+
 		var receivingId = setInterval(function() {
-			$.get('http://qqly.herokuapp.com/api/rooms/' + this.state.roomId, function(e, data) {
-				console.log('DATA', e, data);
-			});
+			$.get('http://qqly.herokuapp.com/api/rooms/' + this.state.roomId, function(data, e) {
+
+				data = data.length === 0? {} : data;
+				data = Object.keys(data).reduce(function(result, key) {
+					var d = data[key];
+					var lat = parseFloat(d[0]), long = parseFloat(d[1]);
+					result[key] = {longitude:long, latitude:lat};
+					return result;
+				}, {});
+				console.log('DATA', e, JSON.stringify(data, null, 2));
+				this.updateMapState(data);
+			}.bind(this));
 		}.bind(this), 1000);
 
 		this.setState({receivingId: receivingId});
 	},
 
+
+	updateUser: function(userId, position) {
+		var state = this.state;
+
+		var user = state.users[userId];
+
+		if (!user) {
+			user = createPerson('#DEADBE');
+			state.users[userId] = user;
+			this.forceUpdate();
+		}
+
+		user.addMarker(position.longitude, position.latitude, 25); //fixme
+	},
+
+
+	updateMapState: function(userPositions) {
+		var state = this.state;
+		var userIds = Object.keys(userPositions);
+
+		userIds.forEach((function(userId) {
+			this.updateUser(userId, userPositions[userId]);
+		}).bind(this));
+	},
+
 	onMove: function onMove(position) {
+		console.info('onMove', position);
+
 		var state = this.state;
 
 		var accuracy = position.coords.accuracy;
 		console.log(position.coords.latitude, position.coords.longitude);
 
-		addMarker(position.coords.longitude, position.coords.latitude, accuracy / 2);
+		//person.addMarker(position.coords.longitude, position.coords.latitude, accuracy / 2);
 		API.post(state.roomId, state.userId, position.coords.latitude, position.coords.longitude);
 	}
 });
