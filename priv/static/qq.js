@@ -8,13 +8,44 @@ L.mapbox.accessToken = 'pk.eyJ1IjoibjEydiIsImEiOiJzcE5NX0hzIn0.0tJfYm5rf6ln0NiTj
 var map = L.mapbox.map('map', 'examples.map-h67hf2ic');
 
 
-function createPerson(color) {
+
+function updateBoundingBox(users) {
+
+	var offset = 0.001;
+	var points = Object.keys(users).reduce(function(result, key) {
+		var points = users[key].getPoints();
+		var point = points[0];
+		if (!point) {
+			return result;
+		}
+		result.push([point[0] - offset, point[1] - offset]);
+		result.push([point[0] + offset, point[1] + offset]);
+		return result.concat(points.slice(1));
+	}, []);
+
+	if (points.length === 0) {
+		return;
+	}
+
+	var point = points.shift();
+	var bounds = L.latLngBounds(point[0], point[1]);
+
+	points.forEach(function(point) {
+		bounds.extend(point);
+	});
+
+	map.fitBounds(bounds);
+}
+
+
+function createUser(color) {
 
 	var points = [];
 	var markers = [];
 	var lines = [];
 
 	function fakeWatchPosition(long, lat, fn) {
+
 		function rnd() {
 			return (Math.random() - 0.5) / 1000;
 		}
@@ -113,32 +144,17 @@ function createPerson(color) {
 
 			prev = point;
 		}
+	}
 
-
-		var bounds = null;
-		var i = points.length;
-		while (i--) {
-			var point = points[i];
-			if (bounds) {
-				bounds.extend(point);
-			} else {
-				var offset = 0.001;
-				bounds = L.latLngBounds(
-					[point[0] - offset, point[1] - offset],
-					[point[0] + offset, point[1] + offset]
-				);
-			}
-		}
-
-		if (bounds) {
-			map.fitBounds(bounds);
-		}
+	function getPoints() {
+		return points;
 	}
 
 	return {
 		addMarker: addMarker,
 		removeAll: removeAll,
 		drawAll: drawAll,
+		getPoints: getPoints,
 		fakeWatchPosition: fakeWatchPosition
 	}
 }

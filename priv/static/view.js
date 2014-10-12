@@ -54,7 +54,7 @@ var App = React.createClass({
 		}
 
 		var users = {};
-		users[userId] = createPerson('#4294FF');
+		users[userId] = createUser('#4294FF');
 
 		this.setState({roomId: roomId, userId: userId, users: users});
 		this.startReceiving();
@@ -113,14 +113,33 @@ var App = React.createClass({
 
 
 	updateUser: function(userId, position) {
-		var state = this.state;
-
-		var user = state.users[userId];
+		var user = this.state.users[userId];
 
 		if (!user) {
-			user = createPerson('#DEADBE');
-			state.users[userId] = user;
-			this.forceUpdate();
+			user = createUser('#DEADBE');
+			this.state.users[userId] = user;
+		}
+
+		var latestPoint = user.getPoints().slice(-1)[0];
+
+		if (latestPoint) {
+
+			function floatEquals(a, b, threshold) {
+				return Math.abs(a - b) <= threshold;
+			}
+
+			latestPoint = {
+				latitude: latestPoint[0],
+				longitude: latestPoint[1]
+			};
+
+			if (floatEquals(latestPoint.latitude, position.latitude, 0) &&
+			    floatEquals(latestPoint.longitude, position.longitude, 0)) {
+				console.log("[" + userId + "] position is the same, not updating.");
+				console.log("latest saved:", latestPoint);
+				console.log("new position:", position);
+				return;
+			}
 		}
 
 		user.addMarker(position.longitude, position.latitude, 25); //fixme
@@ -134,6 +153,9 @@ var App = React.createClass({
 		userIds.forEach((function(userId) {
 			this.updateUser(userId, userPositions[userId]);
 		}).bind(this));
+		this.forceUpdate();
+
+		updateBoundingBox(this.state.users);
 	},
 
 	onMove: function onMove(position) {
@@ -144,7 +166,6 @@ var App = React.createClass({
 		var accuracy = position.coords.accuracy;
 		console.log(position.coords.latitude, position.coords.longitude);
 
-		//person.addMarker(position.coords.longitude, position.coords.latitude, accuracy / 2);
 		API.post(state.roomId, state.userId, position.coords.latitude, position.coords.longitude);
 	}
 });
