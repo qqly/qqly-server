@@ -8,22 +8,22 @@
 start(_StartType, _StartArgs) ->
     io:format("callback called~n"),
     {ok, _} = qqly_controller:start_link(),
-    Port = get_port(),
-    start_api(qqly_api, Port).
+    % Port = get_port(),
+    start_api(qqly_api, []).
+
 
 stop(_State) ->
     ok.
 
 
-
-get_port() ->
-    case os:getenv("PORT") of
-        false ->
-            {ok, Port} = application:get_env(http_port),
-            Port;
-        Other ->
-            list_to_integer(Other)
-    end.
+% get_port() ->
+%     case os:getenv("PORT") of
+%         false ->
+%             {ok, Port} = application:get_env(http_port),
+%             Port;
+%         Other ->
+%             list_to_integer(Other)
+%     end.
 
 
 start_api(Module, Port) ->
@@ -33,7 +33,7 @@ start_api(Module, Port) ->
     ok = start_application(cowboy),
     ok = start_application(leptus),
     HttpHandlers = [{Module, []}],
-    leptus:start_listener(http, [{'_', HttpHandlers}], [{port, Port}]).
+    leptus:start_listener(http, [{'_', HttpHandlers}]).
 
 
 start_application(App) ->
