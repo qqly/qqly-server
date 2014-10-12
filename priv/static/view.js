@@ -18,16 +18,12 @@ var API = {
 
 function setRoomId(state) {
 	location.hash = state;
-	//history.replaceState(null, 'Blah', '/' + state);
 }
 
 function getRoomId() {
 	return location.hash.replace(/^\#/, '');
 }
 
-//function isOwner() {
-//	return location.pathname.slice(1) === userId;
-//}
 
 var App = React.createClass({
 	getInitialState: function() {
@@ -77,7 +73,11 @@ var App = React.createClass({
 		this.setState({sharing: false, mode: 'home'});
 
 		if (this.state.watchId) {
-			clearInterval(this.state.watchId);
+			if (location.search == '?fake') {
+				clearInterval(this.state.watchId);
+			} else {
+				navigator.geolocation.clearWatch(this.state.watchId);
+			}
 		}
 
 		setRoomId('');
@@ -87,8 +87,19 @@ var App = React.createClass({
 		e.preventDefault();
 		this.setState({sharing: true, mode: 'sharing'});
 		var person = this.state.users[this.state.userId];
-		var watchId = person.fakeWatchPosition(-122.40225459999999, 37.7847328, this.onMove);
+
+		var watchId = 0;
+		if (location.search == '?fake') {
+			watchId = person.fakeWatchPosition(-122.40225459999999, 37.7847328, this.onMove);
+		} else {
+			watchID = navigator.geolocation.watchPosition(this.onMove, this.onMoveError, {enableHighAccuracy: true});
+		}
+
 		this.setState({watchId: watchId});
+	},
+
+	onMoveError: function(e) {
+		console.warn('Move error', e);
 	},
 
 	startReceiving: function() {
@@ -116,7 +127,7 @@ var App = React.createClass({
 		var user = this.state.users[userId];
 
 		if (!user) {
-			user = createUser('#DEADBE');
+			user = createUser('#FF6100');
 			this.state.users[userId] = user;
 		}
 
@@ -133,8 +144,8 @@ var App = React.createClass({
 				longitude: latestPoint[1]
 			};
 
-			if (floatEquals(latestPoint.latitude, position.latitude, 0) &&
-			    floatEquals(latestPoint.longitude, position.longitude, 0)) {
+			if (floatEquals(latestPoint.latitude, position.latitude, 0.0001) &&
+			    floatEquals(latestPoint.longitude, position.longitude, 0.0001)) {
 				console.log("[" + userId + "] position is the same, not updating.");
 				console.log("latest saved:", latestPoint);
 				console.log("new position:", position);
@@ -147,15 +158,15 @@ var App = React.createClass({
 
 
 	updateMapState: function(userPositions) {
-		var state = this.state;
 		var userIds = Object.keys(userPositions);
 
 		userIds.forEach((function(userId) {
 			this.updateUser(userId, userPositions[userId]);
 		}).bind(this));
 		this.forceUpdate();
-
-		updateBoundingBox(this.state.users);
+		if (!$('body').hasClass('leaflet-dragging')) {
+			updateBoundingBox(this.state.users);
+		}
 	},
 
 	onMove: function onMove(position) {
@@ -163,7 +174,6 @@ var App = React.createClass({
 
 		var state = this.state;
 
-		var accuracy = position.coords.accuracy;
 		console.log(position.coords.latitude, position.coords.longitude);
 
 		API.post(state.roomId, state.userId, position.coords.latitude, position.coords.longitude);

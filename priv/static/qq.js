@@ -4,9 +4,15 @@ var SERVER_URL = 'http://0.0.0.0:8000/';
 var MAX_POINTS = 60;
 
 
-L.mapbox.accessToken = 'pk.eyJ1IjoibjEydiIsImEiOiJzcE5NX0hzIn0.0tJfYm5rf6ln0NiTjSTPaQ';
-var map = L.mapbox.map('map', 'examples.map-h67hf2ic');
 
+
+L.mapbox.accessToken = 'pk.eyJ1IjoibjEydiIsImEiOiJzcE5NX0hzIn0.0tJfYm5rf6ln0NiTjSTPaQ';
+var tileLayer = L.mapbox.tileLayer('examples.map-h67hf2ic', {});
+var map = L.mapbox.map('map', null, {
+	center: [37.7853855,-122.398242],
+	zoom: 13
+});
+tileLayer.addTo(map);
 
 
 function updateBoundingBox(users) {
@@ -18,8 +24,8 @@ function updateBoundingBox(users) {
 		if (!point) {
 			return result;
 		}
-		result.push([point[0] - offset, point[1] - offset]);
-		result.push([point[0] + offset, point[1] + offset]);
+		result.push([point[0], point[1]]);
+		result.push([point[0], point[1]]);
 		return result.concat(points.slice(1));
 	}, []);
 
