@@ -19,7 +19,12 @@ start_api(Module) ->
     ok = start_application(cowboy),
     ok = start_application(leptus),
     HttpHandlers = [{Module, []}],
-    leptus:start_listener(http, [{'_', HttpHandlers}], [{ip, {0, 0, 0, 0}}, {port, get_port()}]).
+    HttpOptions  = [
+        {ip, {0, 0, 0, 0}},
+        {port, get_port()},
+        {static_dir, {'_', {priv_dir, ?MODULE, "public"}}}
+    ],
+    leptus:start_listener(http, [{'_', HttpHandlers}], HttpOptions).
 
 
 start_application(App) ->
