@@ -15,6 +15,16 @@ var API = {
 	}
 };
 
+function getUserId() {
+	var userId = localStorage.getItem('userId');
+	if (!userId) {
+		var hashids = new Hashids(navigator.userAgent + '~' + [screen.width, screen.height, screen.pixelDepth].join('#'));
+		var random32bit = Math.floor(Math.random() * Math.pow(2, 31));
+		userId = hashids.encode(random32bit);
+		localStorage.setItem('userId', userId);
+	}
+	return userId;
+}
 
 function setRoomId(state) {
 	location.hash = state;
@@ -41,7 +51,7 @@ var App = React.createClass({
 	},
 
 	componentDidMount: function() {
-		var userId = xkcd_pw_gen();
+		var userId = getUserId();
 
 		if (getRoomId() === '') {
 			var roomId = xkcd_pw_gen();
